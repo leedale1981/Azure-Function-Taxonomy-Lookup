@@ -25,16 +25,16 @@ namespace Lee.AzureFunctions.Taxonomy
 
             string siteCollectionUrl = siteUrl.ToLower().Substring(0, siteUrl.IndexOf("_layout"));
 
-            log.Info($"C# HTTP trigger function looking up site request approver for site {siteCollectionUrl}.");
+            log.Info($"C# HTTP trigger function looking up taxonomy value for site {siteCollectionUrl}.");
 
-            string siteApprover = GetSiteApproverFromTermStore(siteCollectionUrl, log);
+            string value = GetValueFromTermStore(siteCollectionUrl, log);
 
-            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(siteApprover) };
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(value) };
         }
 
-        private static string GetSiteApproverFromTermStore(string siteCollectionUrl, TraceWriter log)
+        private static string GetValueFromTermStore(string siteCollectionUrl, TraceWriter log)
         {
-            string siteApprover = string.Empty;
+            string value = string.Empty;
 
             using (ClientContext context = new AuthenticationContext(siteCollectionUrl).GetAuthenticationContext())
             {
@@ -57,14 +57,14 @@ namespace Lee.AzureFunctions.Taxonomy
 
                 if (session != null && store != null)
                 {
-                    siteApprover = GetApproverFromTermGroup(store, log, context);
+                    value = GetValueFromTermGroup(store, log, context);
                 }
             }
 
-            return siteApprover;
+            return value;
         }
 
-        private static string GetApproverFromTermGroup(TermStore store, TraceWriter log, ClientContext context)
+        private static string GetValueFromTermGroup(TermStore store, TraceWriter log, ClientContext context)
         {
             string value = string.Empty;
             string[] termNames = EnvironmentConfigurationManager.GetSetting(AppSettings.TermGroupName).Split(';');
@@ -101,7 +101,7 @@ namespace Lee.AzureFunctions.Taxonomy
                             st => st.LocalCustomProperties));
                             context.ExecuteQueryRetry();
 
-                            log.Info($"Found site request approver term");
+                            log.Info($"Found {term.Name} term");
                             value = term.LocalCustomProperties["Value"];
                             log.Info($" {termNames[2]} is {value}");
                         }
